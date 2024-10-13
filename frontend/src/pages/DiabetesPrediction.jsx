@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { TextField, Button, Container, Typography, Box, Paper, CircularProgress } from '@mui/material';
 import axios from 'axios';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { ToastContainer, toast } from 'react-toastify'; 
+import 'react-toastify/dist/ReactToastify.css'; 
 
 function DiabetesPrediction() {
   const [formData, setFormData] = useState({
@@ -26,31 +28,38 @@ function DiabetesPrediction() {
     e.preventDefault();
     setLoading(true);  // Set loading to true when form is submitted
     setResult(null);   // Reset result before prediction
-  
     try {
-      const backendUrl = import.meta.env.VITE_BACKEND_URL;
-      const response = await axios.post(`${backendUrl}/predict`, {
-        Pregnancies: parseFloat(formData.Pregnancies),
-        Glucose: parseFloat(formData.Glucose),
-        BloodPressure: parseFloat(formData.BloodPressure),
-        SkinThickness: parseFloat(formData.SkinThickness),
-        Insulin: parseFloat(formData.Insulin),
-        BMI: parseFloat(formData.BMI),
-        DiabetesPedigreeFunction: parseFloat(formData.DiabetesPedigreeFunction),
-        Age: parseFloat(formData.Age),
-      });
-  
-      // Adjust according to how your backend returns the prediction
-      setResult(response.data.prediction);  // Make sure 'prediction' is the correct key from your response
+        const backendUrl = import.meta.env.VITE_BACKEND_URL;
+        const response = await axios.post(`${backendUrl}/predict`, {
+            Pregnancies: parseFloat(formData.Pregnancies),
+            Glucose: parseFloat(formData.Glucose),
+            BloodPressure: parseFloat(formData.BloodPressure),
+            SkinThickness: parseFloat(formData.SkinThickness),
+            Insulin: parseFloat(formData.Insulin),
+            BMI: parseFloat(formData.BMI),
+            DiabetesPedigreeFunction: parseFloat(formData.DiabetesPedigreeFunction),
+            Age: parseFloat(formData.Age),
+        }
+      );
+      setResult(response.data.prediction);
     } catch (error) {
-      console.error('Error fetching prediction:', error);
-      setLoading(false);  // Reset loading on error
-    } finally {
-      setLoading(false);  // Reset loading regardless of success or failure
-    }
-  };
-  
+      if (error.response) {
+          if (error.response.status === 400) {
+              toast.error(error.response.data.error);
+          } else {
+              toast.error('An unexpected error occurred. Please try again later.');
+          }
+      } else {
+          toast.error('Network error. Please check your connection.');
+      }
+  } finally {
+      setLoading(false);
+  }
+};
 
+
+
+  
   const theme = createTheme({
     palette: {
       primary: {
@@ -64,6 +73,7 @@ function DiabetesPrediction() {
 
   return (
     <ThemeProvider theme={theme}>
+      <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} closeOnClick draggable pauseOnHover />
       <Box
         sx={{
           minHeight: '100vh',
@@ -97,7 +107,7 @@ function DiabetesPrediction() {
                 Predict
               </Button>
             </Box>
-            {loading ? ( // Show CircularProgress while loading
+            {loading ? ( 
               <CircularProgress sx={{ marginTop: 3 }} />
             ) : (
               result !== null && (
@@ -117,4 +127,3 @@ function DiabetesPrediction() {
 }
 
 export default DiabetesPrediction;
-
