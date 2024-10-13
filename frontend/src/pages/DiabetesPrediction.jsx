@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { TextField, Button, Container, Typography, Box, Paper, CircularProgress } from '@mui/material';
-// import axios from 'axios';
+import axios from 'axios';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
 function DiabetesPrediction() {
@@ -15,7 +15,7 @@ function DiabetesPrediction() {
     Age: ''
   });
   const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);  // New state for loading
+  const [loading, setLoading] = useState(false);  
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -26,22 +26,30 @@ function DiabetesPrediction() {
     e.preventDefault();
     setLoading(true);  // Set loading to true when form is submitted
     setResult(null);   // Reset result before prediction
-
-    // Simulate a delay for prediction (you can uncomment the axios part when ready)
-    setTimeout(() => {
-      setResult(0);  // Simulating a prediction result
-      setLoading(false);  // Reset loading state after prediction
-    }, 2000);
-    
-    // Uncomment when integrating with the backend
-    // try {
-    //   const response = await axios.post('http://localhost:5000/api/predict', formData);
-    //   setResult(response.data.outcome);
-    // } catch (error) {
-    //   console.error('Error fetching prediction:', error);
-    //   setLoading(false);  // Reset loading on error
-    // }
+  
+    try {
+      const backendUrl = import.meta.env.VITE_BACKEND_URL;
+      const response = await axios.post(`${backendUrl}/predict`, {
+        Pregnancies: parseFloat(formData.Pregnancies),
+        Glucose: parseFloat(formData.Glucose),
+        BloodPressure: parseFloat(formData.BloodPressure),
+        SkinThickness: parseFloat(formData.SkinThickness),
+        Insulin: parseFloat(formData.Insulin),
+        BMI: parseFloat(formData.BMI),
+        DiabetesPedigreeFunction: parseFloat(formData.DiabetesPedigreeFunction),
+        Age: parseFloat(formData.Age),
+      });
+  
+      // Adjust according to how your backend returns the prediction
+      setResult(response.data.prediction);  // Make sure 'prediction' is the correct key from your response
+    } catch (error) {
+      console.error('Error fetching prediction:', error);
+      setLoading(false);  // Reset loading on error
+    } finally {
+      setLoading(false);  // Reset loading regardless of success or failure
+    }
   };
+  
 
   const theme = createTheme({
     palette: {
